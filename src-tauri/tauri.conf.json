@@ -1,0 +1,39 @@
+{
+  "productName": "JARVIS",
+  "version": "2.5.0",
+  "identifier": "com.stark.jarvis",
+  "build": {
+    "beforeDevCommand": "npm run build",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Project JARVIS",
+        "width": 1280,
+        "height": 840,
+        "minWidth": 900,
+        "minHeight": 650,
+        "decorations": true,
+        "transparent": false,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: http: data: blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

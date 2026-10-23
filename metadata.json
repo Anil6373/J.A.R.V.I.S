@@ -1,0 +1,6 @@
+{
+  "name": "Project JARVIS - Personal AI Assistant",
+  "description": "Cinematic personal AI assistant for Windows inspired by JARVIS, with natural voice interaction, holographic Arc Reactor, live system telemetry, tool execution, and persistent memory.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
