@@ -99,9 +99,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onChange={(e) => onSelectModel(e.target.value)}
               className="w-full bg-slate-950 border border-cyan-500/30 rounded p-2.5 text-cyan-100 focus:outline-none focus:border-cyan-400"
             >
-              <option value="gemini-3.8-flash">gemini-3.8-flash (Recommended: Low-latency & Function Tools)</option>
-              <option value="gemini-2.5-flash">gemini-2.5-flash (Balanced Reasoning)</option>
-              <option value="gemini-2.0-flash">gemini-2.0-flash (General Purpose)</option>
+              <option value="gemini-3-flash-preview">gemini-3-flash-preview (Recommended: Ultra-fast & High Capacity)</option>
+              <option value="gemini-flash-latest">gemini-flash-latest (Stable Production)</option>
+              <option value="gemini-3.8-flash">gemini-3.8-flash (Experimental)</option>
             </select>
           </div>
 

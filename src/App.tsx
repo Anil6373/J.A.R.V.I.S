@@ -41,7 +41,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Settings
-  const [currentModel, setCurrentModel] = useState('gemini-3.8-flash');
+  const [currentModel, setCurrentModel] = useState('gemini-3-flash-preview');
   const [toolsEnabled, setToolsEnabled] = useState(true);
   const [wakeWordEnabled, setWakeWordEnabled] = useState(false);
 

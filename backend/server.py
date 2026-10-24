@@ -15,6 +15,30 @@ from .tools.registry import ToolRegistry
 from .voice.native_tts import WindowsVoiceEngine
 from .ai.gemini_client import GeminiClient
 
+def load_env_file():
+    candidates = [
+        os.path.abspath(".env"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    ]
+    for env_path in candidates:
+        if os.path.isfile(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#") or "=" not in line:
+                            continue
+                        k, v = line.split("=", 1)
+                        k = k.strip()
+                        v = v.strip().strip("'\"")
+                        if k and k not in os.environ:
+                            os.environ[k] = v
+                break
+            except Exception:
+                pass
+
+load_env_file()
+
 class JarvisServer:
     def __init__(self, host: str = "127.0.0.1", port: int = 8080, db_path: str = "jarvis_memory.db", web_dir: str = "dist"):
         self.host = host
@@ -28,7 +52,7 @@ class JarvisServer:
         self.voice = WindowsVoiceEngine()
         self.gemini = GeminiClient(
             api_key=os.getenv("GEMINI_API_KEY", ""),
-            model=os.getenv("GEMINI_MODEL", "gemini-3.8-flash"),
+            model=os.getenv("GEMINI_MODEL", "gemini-3-flash-preview"),
             tool_registry=self.tool_registry,
             memory_manager=self.memory,
             validator=self.validator
@@ -124,6 +148,8 @@ class JarvisServer:
                     self.server_instance.voice.stop()
                     self._send_json(200, {"success": True})
                 elif path == "/api/settings":
+                    if payload.get("api_key"):
+                        self.server_instance.gemini.update_config(api_key=payload["api_key"])
                     if payload.get("model"):
                         self.server_instance.gemini.update_config(model=payload["model"])
                     if "tools_enabled" in payload:

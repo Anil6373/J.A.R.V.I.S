@@ -12,7 +12,8 @@ from ..memory.db import MemoryManager
 from ..security.validator import SecurityValidator
 
 class GeminiClient:
-    DEFAULT_MODEL = "gemini-3.8-flash"
+    DEFAULT_MODEL = "gemini-3-flash-preview"
+    FALLBACK_MODELS = ["gemini-3-flash-preview", "gemini-flash-latest", "gemini-flash-lite-latest"]
 
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None,
                  tool_registry: Optional[ToolRegistry] = None, memory_manager: Optional[MemoryManager] = None,
@@ -32,17 +33,22 @@ class GeminiClient:
     def test_connection(self) -> Dict[str, Any]:
         if not self.api_key:
             return {"connected": False, "error": "No Gemini API key supplied."}
-        try:
-            payload = {"contents": [{"parts": [{"text": "Ping"}]}]}
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
-            req = urllib.request.Request(
-                url, data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json", "User-Agent": "aistudio-build"}, method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=6.0):
-                return {"connected": True, "model": self.model}
-        except Exception as e:
-            return {"connected": False, "error": self.validator.redact_secrets(str(e))}
+        models_to_try = [self.model] + [m for m in self.FALLBACK_MODELS if m != self.model]
+        last_error = ""
+        for m in models_to_try:
+            try:
+                payload = {"contents": [{"parts": [{"text": "Ping"}]}]}
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
+                req = urllib.request.Request(
+                    url, data=json.dumps(payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json", "User-Agent": "aistudio-build"}, method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=8.0):
+                    self.model = m
+                    return {"connected": True, "model": self.model}
+            except Exception as e:
+                last_error = str(e)
+        return {"connected": False, "error": self.validator.redact_secrets(last_error)}
 
     def chat(self, user_message: str, session_id: str = "default") -> Dict[str, Any]:
         if not self.api_key:
@@ -78,18 +84,29 @@ class GeminiClient:
             if tool_declarations:
                 request_body["tools"] = [{"functionDeclarations": tool_declarations}]
 
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
-            req = urllib.request.Request(
-                url, data=json.dumps(request_body).encode("utf-8"),
-                headers={"Content-Type": "application/json", "User-Agent": "aistudio-build"}, method="POST"
-            )
+            # Try requested model, and fallback to alternates if 503/404/timeout happens
+            candidate_models = [self.model] + [m for m in self.FALLBACK_MODELS if m != self.model]
+            resp_data = None
+            last_err = None
 
-            try:
-                with urllib.request.urlopen(req, timeout=25.0) as resp:
-                    resp_data = json.loads(resp.read().decode("utf-8"))
-            except Exception as e:
+            for m in candidate_models:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
+                req = urllib.request.Request(
+                    url, data=json.dumps(request_body).encode("utf-8"),
+                    headers={"Content-Type": "application/json", "User-Agent": "aistudio-build"}, method="POST"
+                )
+                try:
+                    with urllib.request.urlopen(req, timeout=15.0) as resp:
+                        resp_data = json.loads(resp.read().decode("utf-8"))
+                        self.model = m
+                        break
+                except Exception as e:
+                    last_err = e
+                    continue
+
+            if resp_data is None:
                 return {
-                    "reply": f"Cognitive relay failure: {self.validator.redact_secrets(str(e))}",
+                    "reply": f"Cognitive relay failure: {self.validator.redact_secrets(str(last_err))}",
                     "tools_used": tools_executed
                 }
 

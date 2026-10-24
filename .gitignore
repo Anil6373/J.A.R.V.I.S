@@ -1,15 +1,37 @@
+# Environment variables and secrets
+.env
+.env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+env/
+!.env.example
+
+# Node & Frontend dependencies and build
 node_modules/
 build/
 dist/
 coverage/
-.DS_Store
-*.log
-.env*
-!.env.example
-*.db
-jarvis_data/
-__pycache__/
+
+# Tauri & Rust build artifacts
+target/
+src-tauri/target/
+
+# Python virtual environments and caches
 venv/
 .venv/
-target/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local databases & application storage
+*.db
+jarvis_data/
 test_approved_dir/
+
+# Logs & System files
+*.log
+.DS_Store
+Thumbs.db
